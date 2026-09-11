@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>离职 Package 计算器</title>
+  <style>
+    :root {
+      --paper: #f3eee4;
+      --card: #fffaf2;
+      --ink: #1a1612;
+      --muted: #6f675e;
+      --line: #e4d9c8;
+      --accent: #0d6e63;
+      --accent-deep: #094f48;
+      --gold: #b45309;
+      --shadow: 0 18px 50px rgba(26, 22, 18, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, #fff 0%, transparent 55%),
+        radial-gradient(900px 500px at 100% 0%, #e7efe8 0%, transparent 50%),
+        var(--paper);
+    }
+
+    .page {
+      width: min(920px, calc(100% - 32px));
+      margin: 40px auto 64px;
+    }
+
+    header {
+      margin-bottom: 28px;
+    }
+
+    .eyebrow {
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-size: 12px;
+      color: var(--accent);
+      font-weight: 600;
+      margin: 0 0 8px;
+    }
+
+    h1 {
+      font-family: "Songti SC", "Noto Serif SC", "STSong", serif;
+      font-size: clamp(32px, 5vw, 46px);
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      margin: 0 0 8px;
+    }
+
+    .lede {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+
+    .card h2 {
+      margin: 0 0 18px;
+      font-size: 15px;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field:last-child {
+      margin-bottom: 0;
+    }
+
+    input, select {
+      width: 100%;
+      height: 46px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 0 14px;
+      font: inherit;
+      font-size: 16px;
+      color: var(--ink);
+      background: #fff;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(13, 110, 99, 0.15);
+    }
+
+    .hint {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .total {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 12px;
+      padding-bottom: 18px;
+      border-bottom: 1px dashed var(--line);
+      margin-bottom: 16px;
+    }
+
+    .total span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .total strong {
+      display: block;
+      font-family: "Songti SC", "Noto Serif SC", "STSong", serif;
+      font-size: clamp(32px, 4vw, 42px);
+      letter-spacing: -0.03em;
+      color: var(--accent-deep);
+      line-height: 1.1;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+    }
+
+    .row:last-child {
+      border-bottom: 0;
+    }
+
+    .row .name {
+      color: var(--ink);
+    }
+
+    .row .formula {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 3px;
+    }
+
+    .row .amount {
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .subtotal {
+      margin-top: 8px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--line);
+      font-weight: 600;
+    }
+
+    .note {
+      margin-top: 18px;
+      padding: 12px 14px;
+      background: #f6f1e6;
+      border-radius: 12px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.65;
+    }
+
+    .error {
+      color: #b42318;
+      font-size: 13px;
+      min-height: 20px;
+      margin-top: 8px;
+    }
+
+    .cap-banner {
+      display: none;
+      margin: 0 0 16px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #f8ead6;
+      color: var(--gold);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .cap-banner.is-on {
+      display: block;
+    }
+
+    @media (max-width: 760px) {
+      .page { margin: 24px auto 48px; }
+      .layout { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <p class="eyebrow">Severance Package</p>
+      <h1>离职 Package 计算器</h1>
+      <p class="lede">按 N+3 赔偿与按月折算年终奖，实时算出离职总包。</p>
+    </header>
+
+    <div class="layout">
+      <section class="card">
+        <h2>填写数据</h2>
+        <form id="form" autocomplete="off">
+          <div class="field">
+            <label for="lastYearTotal">去年总包（元）</label>
+            <input id="lastYearTotal" name="lastYearTotal" type="number" min="0" step="0.01" inputmode="decimal" placeholder="例如 360000" required />
+            <p class="hint">平均月薪 = 去年总包 / 12。</p>
+          </div>
+          <div class="field">
+            <label for="allowance">每月补贴（元）</label>
+            <input id="allowance" name="allowance" type="number" min="0" step="0.01" inputmode="decimal" placeholder="例如 5000" required />
+          </div>
+          <div class="field">
+            <label for="tenure">入职时长 N（年）</label>
+            <input id="tenure" name="tenure" type="number" min="0" step="0.5" inputmode="decimal" placeholder="例如 3 或 3.5" required />
+            <p class="hint">N 为赔偿倍数，可填小数，如 2.5 年。</p>
+          </div>
+          <div class="field">
+            <label for="month">离职月份</label>
+            <select id="month" name="month" required>
+              <option value="">请选择</option>
+              <option value="1">1 月</option>
+              <option value="2">2 月</option>
+              <option value="3">3 月</option>
+              <option value="4">4 月</option>
+              <option value="5">5 月</option>
+              <option value="6">6 月</option>
+              <option value="7">7 月</option>
+              <option value="8">8 月</option>
+              <option value="9">9 月</option>
+              <option value="10">10 月</option>
+              <option value="11">11 月</option>
+              <option value="12">12 月</option>
+            </select>
+            <p class="hint">用于年终奖：离职月份 / 12 × 1 个月平均月薪。</p>
+          </div>
+          <div class="field">
+            <label for="leaveDays">剩余年假（天）</label>
+            <input id="leaveDays" name="leaveDays" type="number" min="0" step="0.5" inputmode="decimal" placeholder="例如 5 或 3.5" required />
+            <p class="hint">日薪 = 平均月薪 / 21.5，年假折现 = 剩余年假 × 日薪，计入总包。</p>
+          </div>
+          <div class="field">
+            <label for="wageCap">上海三倍社平（元/月）</label>
+            <input id="wageCap" name="wageCap" type="number" min="0" step="0.01" inputmode="decimal" value="37731" required />
+            <p class="hint">默认按 2025 年度全口径社平 12,577 元/月 × 3 = 37,731 元/月。N+2 用 min(总包/12, 三倍社平)。</p>
+          </div>
+        </form>
+        <p class="error" id="error"></p>
+      </section>
+
+      <section class="card">
+        <h2>计算结果</h2>
+        <div class="total">
+          <div>
+            <span>离职总包</span>
+            <strong id="grandTotal">—</strong>
+          </div>
+        </div>
+        <p class="cap-banner" id="capBanner"></p>
+
+        <div class="row">
+          <div>
+            <div class="name">平均月薪</div>
+            <div class="formula">去年总包 / 12</div>
+          </div>
+          <div class="amount" id="avgMonthly">—</div>
+        </div>
+        <div class="row">
+          <div>
+            <div class="name">N+2 赔偿</div>
+            <div class="formula" id="nPlus2Formula">(N+2) × min(平均月薪, 三倍社平)</div>
+          </div>
+          <div class="amount" id="nPlus2">—</div>
+        </div>
+        <div class="row">
+          <div>
+            <div class="name">+1 赔偿</div>
+            <div class="formula" id="plusOneFormula">平均月薪 − 补贴</div>
+          </div>
+          <div class="amount" id="plusOne">—</div>
+        </div>
+        <div class="row subtotal">
+          <div class="name">赔偿合计（N+3）</div>
+          <div class="amount" id="severance">—</div>
+        </div>
+        <div class="row">
+          <div>
+            <div class="name">年终奖</div>
+            <div class="formula" id="bonusFormula">离职月份 / 12 × 平均月薪</div>
+          </div>
+          <div class="amount" id="bonus">—</div>
+        </div>
+        <div class="row">
+          <div>
+            <div class="name">日薪</div>
+            <div class="formula">平均月薪 / 21.5</div>
+          </div>
+          <div class="amount" id="dailyWage">—</div>
+        </div>
+        <div class="row">
+          <div>
+            <div class="name">剩余年假折现</div>
+            <div class="formula" id="leavePayFormula">剩余年假 × 日薪</div>
+          </div>
+          <div class="amount" id="leavePay">—</div>
+        </div>
+
+        <p class="note">
+          规则：公司赔偿 N+3。平均月薪 = 去年总包 / 12。N+2 按平均月薪与上海三倍社平取低者计算；另外 1 个月按「平均月薪 − 补贴」。
+          年终奖按离职月份 / 12 × 平均月薪。剩余年假按日薪（平均月薪 / 21.5）折现后计入总包。结果仅供估算，实际以公司政策与劳动合同为准。
+        </p>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const DEFAULT_WAGE_CAP = 37731;
+    const WORK_DAYS_PER_MONTH = 21.5;
+    const fields = ["lastYearTotal", "allowance", "tenure", "month", "leaveDays", "wageCap"];
+    const els = Object.fromEntries(
+      [...fields, "error", "grandTotal", "avgMonthly", "nPlus2", "nPlus2Formula", "plusOne", "plusOneFormula", "severance", "bonus", "bonusFormula", "dailyWage", "leavePay", "leavePayFormula", "capBanner"]
+        .map((id) => [id, document.getElementById(id)])
+    );
+
+    const money = new Intl.NumberFormat("zh-CN", {
+      style: "currency",
+      currency: "CNY",
+      maximumFractionDigits: 2,
+    });
+
+    function num(id) {
+      const value = els[id].value;
+      if (value === "" || value === null) return null;
+      const n = Number(value);
+      return Number.isFinite(n) ? n : NaN;
+    }
+
+    function calc() {
+      const lastYearTotal = num("lastYearTotal");
+      const allowance = num("allowance");
+      const tenure = num("tenure");
+      const month = num("month");
+      const leaveDays = num("leaveDays");
+      const wageCap = num("wageCap");
+
+      const ready = [lastYearTotal, allowance, tenure, month, leaveDays, wageCap].every((v) => v !== null);
+      if (!ready) {
+        els.error.textContent = "";
+        els.capBanner.classList.remove("is-on");
+        return;
+      }
+
+      if ([lastYearTotal, allowance, tenure, month, leaveDays, wageCap].some((v) => Number.isNaN(v))) {
+        els.error.textContent = "请输入有效数字。";
+        return;
+      }
+      if (lastYearTotal < 0 || allowance < 0 || tenure < 0 || leaveDays < 0 || wageCap < 0) {
+        els.error.textContent = "金额、年假和入职时长不能为负数。";
+        return;
+      }
+      if (month < 1 || month > 12) {
+        els.error.textContent = "离职月份需在 1 到 12 之间。";
+        return;
+      }
+
+      const avgMonthly = lastYearTotal / 12;
+      const plusOne = avgMonthly - allowance;
+      if (plusOne < 0) {
+        els.error.textContent = "补贴不能大于平均月薪（去年总包 / 12）。";
+        els.capBanner.classList.remove("is-on");
+        return;
+      }
+
+      els.error.textContent = "";
+
+      const cap = wageCap || DEFAULT_WAGE_CAP;
+      const nPlus2Monthly = Math.min(avgMonthly, cap);
+      const isCapped = avgMonthly > cap;
+      const nPlus2 = (tenure + 2) * nPlus2Monthly;
+      const severance = nPlus2 + plusOne;
+      const bonus = (month / 12) * avgMonthly;
+      const dailyWage = avgMonthly / WORK_DAYS_PER_MONTH;
+      const leavePay = leaveDays * dailyWage;
+      const total = severance + bonus + leavePay;
+
+      els.avgMonthly.textContent = money.format(avgMonthly);
+      els.nPlus2Formula.textContent = isCapped
+        ? `(${formatNumber(tenure)} + 2) × ${money.format(nPlus2Monthly)}（三倍社平封顶）`
+        : `(${formatNumber(tenure)} + 2) × ${money.format(avgMonthly)}`;
+      els.plusOneFormula.textContent = `${money.format(avgMonthly)} − ${money.format(allowance)}`;
+      els.bonusFormula.textContent = `${month} / 12 × ${money.format(avgMonthly)}`;
+      els.leavePayFormula.textContent = `${formatNumber(leaveDays)} × ${money.format(dailyWage)}`;
+      els.nPlus2.textContent = money.format(nPlus2);
+      els.plusOne.textContent = money.format(plusOne);
+      els.severance.textContent = money.format(severance);
+      els.bonus.textContent = money.format(bonus);
+      els.dailyWage.textContent = money.format(dailyWage);
+      els.leavePay.textContent = money.format(leavePay);
+      els.grandTotal.textContent = money.format(total);
+
+      if (isCapped) {
+        els.capBanner.textContent = `平均月薪（总包/12）为 ${money.format(avgMonthly)}，已超过上海三倍社平 ${money.format(cap)}，N+2 按三倍社平计算。`;
+        els.capBanner.classList.add("is-on");
+      } else {
+        els.capBanner.classList.remove("is-on");
+        els.capBanner.textContent = "";
+      }
+    }
+
+    function formatNumber(n) {
+      return Number.isInteger(n) ? String(n) : String(n);
+    }
+
+    document.getElementById("form").addEventListener("input", calc);
+    document.getElementById("form").addEventListener("change", calc);
+  </script>
+</body>
+</html>
