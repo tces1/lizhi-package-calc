@@ -271,7 +271,7 @@
           <div class="field">
             <label for="leaveDays">剩余年假（天）</label>
             <input id="leaveDays" name="leaveDays" type="number" min="0" step="0.5" inputmode="decimal" placeholder="例如 5 或 3.5" required />
-            <p class="hint">日薪 = 平均月薪 / 21.5，年假折现 = 剩余年假 × 日薪，计入总包。</p>
+            <p class="hint">日薪 = 平均月薪 / 21.5，年假折现 = 剩余年假 × 日薪 × 2，计入总包。</p>
           </div>
           <div class="field">
             <label for="wageCap">上海三倍社平（元/月）</label>
@@ -334,14 +334,14 @@
         <div class="row">
           <div>
             <div class="name">剩余年假折现</div>
-            <div class="formula" id="leavePayFormula">剩余年假 × 日薪</div>
+            <div class="formula" id="leavePayFormula">剩余年假 × 日薪 × 2</div>
           </div>
           <div class="amount" id="leavePay">—</div>
         </div>
 
         <p class="note">
           规则：公司赔偿 N+3。平均月薪 = 去年总包 / 12。N+2 按平均月薪与上海三倍社平取低者计算；另外 1 个月按「平均月薪 − 补贴」。
-          年终奖按离职月份 / 12 × 平均月薪。剩余年假按日薪（平均月薪 / 21.5）折现后计入总包。结果仅供估算，实际以公司政策与劳动合同为准。
+          年终奖按离职月份 / 12 × 平均月薪。剩余年假按日薪（平均月薪 / 21.5）× 2 折现后计入总包。结果仅供估算，实际以公司政策与劳动合同为准。
         </p>
       </section>
     </div>
@@ -414,7 +414,7 @@
       const severance = nPlus2 + plusOne;
       const bonus = (month / 12) * avgMonthly;
       const dailyWage = avgMonthly / WORK_DAYS_PER_MONTH;
-      const leavePay = leaveDays * dailyWage;
+      const leavePay = leaveDays * dailyWage * 2;
       const total = severance + bonus + leavePay;
 
       els.avgMonthly.textContent = money.format(avgMonthly);
@@ -423,7 +423,7 @@
         : `(${formatNumber(tenure)} + 2) × ${money.format(avgMonthly)}`;
       els.plusOneFormula.textContent = `${money.format(avgMonthly)} − ${money.format(allowance)}`;
       els.bonusFormula.textContent = `${month} / 12 × ${money.format(avgMonthly)}`;
-      els.leavePayFormula.textContent = `${formatNumber(leaveDays)} × ${money.format(dailyWage)}`;
+      els.leavePayFormula.textContent = `${formatNumber(leaveDays)} × ${money.format(dailyWage)} × 2`;
       els.nPlus2.textContent = money.format(nPlus2);
       els.plusOne.textContent = money.format(plusOne);
       els.severance.textContent = money.format(severance);
