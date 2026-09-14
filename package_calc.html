@@ -238,7 +238,12 @@
           <div class="field">
             <label for="lastYearTotal">去年总包（元）</label>
             <input id="lastYearTotal" name="lastYearTotal" type="number" min="0" step="0.01" inputmode="decimal" placeholder="例如 360000" required />
-            <p class="hint">平均月薪 = 去年总包 / 12。</p>
+            <p class="hint">平均月薪 = 去年总包 / 12，含年终奖。</p>
+          </div>
+          <div class="field">
+            <label for="yearBonus">年终奖（元）</label>
+            <input id="yearBonus" name="yearBonus" type="number" min="0" step="0.01" inputmode="decimal" placeholder="例如 60000" required />
+            <p class="hint">计入去年总包中的年终奖。算 +1、+2 月平时会从总包中扣除。</p>
           </div>
           <div class="field">
             <label for="allowance">每月补贴（元）</label>
@@ -266,7 +271,7 @@
               <option value="11">11 月</option>
               <option value="12">12 月</option>
             </select>
-            <p class="hint">用于年终奖：离职月份 / 12 × 1 个月平均月薪。</p>
+            <p class="hint">用于年终奖折算：离职月份 / 12 × 不含奖月薪。</p>
           </div>
           <div class="field">
             <label for="leaveDays">剩余年假（天）</label>
@@ -276,7 +281,7 @@
           <div class="field">
             <label for="wageCap">上海三倍社平（元/月）</label>
             <input id="wageCap" name="wageCap" type="number" min="0" step="0.01" inputmode="decimal" value="37731" required />
-            <p class="hint">默认按 2025 年度全口径社平 12,577 元/月 × 3 = 37,731 元/月。仅 N 按 min(总包/12, 三倍社平)；+1 和 +2 不封顶。</p>
+            <p class="hint">默认按 2025 年度全口径社平 12,577 元/月 × 3 = 37,731 元/月。仅 N 按 min(总包/12, 三倍社平)；+1 和 +2 用不含奖月薪且不封顶。</p>
           </div>
         </form>
         <p class="error" id="error"></p>
@@ -301,6 +306,13 @@
         </div>
         <div class="row">
           <div>
+            <div class="name">不含奖月薪</div>
+            <div class="formula">（去年总包 − 年终奖）/ 12</div>
+          </div>
+          <div class="amount" id="baseMonthly">—</div>
+        </div>
+        <div class="row">
+          <div>
             <div class="name">N 赔偿</div>
             <div class="formula" id="nFormula">N × min(平均月薪, 三倍社平)</div>
           </div>
@@ -309,14 +321,14 @@
         <div class="row">
           <div>
             <div class="name">+2 赔偿</div>
-            <div class="formula" id="plusTwoFormula">2 × 平均月薪</div>
+            <div class="formula" id="plusTwoFormula">2 × 不含奖月薪</div>
           </div>
           <div class="amount" id="plusTwo">—</div>
         </div>
         <div class="row">
           <div>
             <div class="name">+1 赔偿</div>
-            <div class="formula" id="plusOneFormula">平均月薪 − 补贴</div>
+            <div class="formula" id="plusOneFormula">不含奖月薪 − 补贴</div>
           </div>
           <div class="amount" id="plusOne">—</div>
         </div>
@@ -326,8 +338,8 @@
         </div>
         <div class="row">
           <div>
-            <div class="name">年终奖</div>
-            <div class="formula" id="bonusFormula">离职月份 / 12 × 平均月薪</div>
+            <div class="name">年终奖折算</div>
+            <div class="formula" id="bonusFormula">离职月份 / 12 × 不含奖月薪</div>
           </div>
           <div class="amount" id="bonus">—</div>
         </div>
@@ -347,8 +359,8 @@
         </div>
 
         <p class="note">
-          规则：公司赔偿 N+3。平均月薪 = 去年总包 / 12。仅 N 按平均月薪与上海三倍社平取低者；+2 按 2 × 平均月薪，+1 按「平均月薪 − 补贴」，均不封顶。
-          年终奖按离职月份 / 12 × 平均月薪。剩余年假按日薪（平均月薪 / 21.5）× 2 折现后计入总包。结果仅供估算，实际以公司政策与劳动合同为准。
+          规则：公司赔偿 N+3。平均月薪 = 去年总包 / 12，不含奖月薪 =（去年总包 − 年终奖）/ 12。仅 N 按平均月薪与上海三倍社平取低者；+2 按 2 × 不含奖月薪，+1 按「不含奖月薪 − 补贴」，均不封顶。
+          年终奖折算按离职月份 / 12 × 不含奖月薪。剩余年假按日薪（平均月薪 / 21.5）× 2 折现后计入总包。结果仅供估算，实际以公司政策与劳动合同为准。
         </p>
       </section>
     </div>
@@ -357,9 +369,9 @@
   <script>
     const DEFAULT_WAGE_CAP = 37731;
     const WORK_DAYS_PER_MONTH = 21.5;
-    const fields = ["lastYearTotal", "allowance", "tenure", "month", "leaveDays", "wageCap"];
+    const fields = ["lastYearTotal", "yearBonus", "allowance", "tenure", "month", "leaveDays", "wageCap"];
     const els = Object.fromEntries(
-      [...fields, "error", "grandTotal", "avgMonthly", "nPay", "nFormula", "plusTwo", "plusTwoFormula", "plusOne", "plusOneFormula", "severance", "bonus", "bonusFormula", "dailyWage", "leavePay", "leavePayFormula", "capBanner"]
+      [...fields, "error", "grandTotal", "avgMonthly", "baseMonthly", "nPay", "nFormula", "plusTwo", "plusTwoFormula", "plusOne", "plusOneFormula", "severance", "bonus", "bonusFormula", "dailyWage", "leavePay", "leavePayFormula", "capBanner"]
         .map((id) => [id, document.getElementById(id)])
     );
 
@@ -378,25 +390,31 @@
 
     function calc() {
       const lastYearTotal = num("lastYearTotal");
+      const yearBonus = num("yearBonus");
       const allowance = num("allowance");
       const tenure = num("tenure");
       const month = num("month");
       const leaveDays = num("leaveDays");
       const wageCap = num("wageCap");
 
-      const ready = [lastYearTotal, allowance, tenure, month, leaveDays, wageCap].every((v) => v !== null);
+      const ready = [lastYearTotal, yearBonus, allowance, tenure, month, leaveDays, wageCap].every((v) => v !== null);
       if (!ready) {
         els.error.textContent = "";
         els.capBanner.classList.remove("is-on");
         return;
       }
 
-      if ([lastYearTotal, allowance, tenure, month, leaveDays, wageCap].some((v) => Number.isNaN(v))) {
+      if ([lastYearTotal, yearBonus, allowance, tenure, month, leaveDays, wageCap].some((v) => Number.isNaN(v))) {
         els.error.textContent = "请输入有效数字。";
         return;
       }
-      if (lastYearTotal < 0 || allowance < 0 || tenure < 0 || leaveDays < 0 || wageCap < 0) {
+      if (lastYearTotal < 0 || yearBonus < 0 || allowance < 0 || tenure < 0 || leaveDays < 0 || wageCap < 0) {
         els.error.textContent = "金额、年假和入职时长不能为负数。";
+        return;
+      }
+      if (yearBonus > lastYearTotal) {
+        els.error.textContent = "年终奖不能大于去年总包。";
+        els.capBanner.classList.remove("is-on");
         return;
       }
       if (month < 1 || month > 12) {
@@ -405,9 +423,10 @@
       }
 
       const avgMonthly = lastYearTotal / 12;
-      const plusOne = avgMonthly - allowance;
+      const baseMonthly = (lastYearTotal - yearBonus) / 12;
+      const plusOne = baseMonthly - allowance;
       if (plusOne < 0) {
-        els.error.textContent = "补贴不能大于平均月薪（去年总包 / 12）。";
+        els.error.textContent = "补贴不能大于不含奖月薪（（去年总包 − 年终奖）/ 12）。";
         els.capBanner.classList.remove("is-on");
         return;
       }
@@ -418,20 +437,21 @@
       const nMonthly = Math.min(avgMonthly, cap);
       const isCapped = avgMonthly > cap;
       const nPay = tenure * nMonthly;
-      const plusTwo = 2 * avgMonthly;
+      const plusTwo = 2 * baseMonthly;
       const severance = nPay + plusTwo + plusOne;
-      const bonus = (month / 12) * avgMonthly;
+      const bonus = (month / 12) * baseMonthly;
       const dailyWage = avgMonthly / WORK_DAYS_PER_MONTH;
       const leavePay = leaveDays * dailyWage * 2;
       const total = severance + bonus + leavePay;
 
       els.avgMonthly.textContent = money.format(avgMonthly);
+      els.baseMonthly.textContent = money.format(baseMonthly);
       els.nFormula.textContent = isCapped
         ? `${formatNumber(tenure)} × ${money.format(nMonthly)}（三倍社平封顶）`
         : `${formatNumber(tenure)} × ${money.format(avgMonthly)}`;
-      els.plusTwoFormula.textContent = `2 × ${money.format(avgMonthly)}`;
-      els.plusOneFormula.textContent = `${money.format(avgMonthly)} − ${money.format(allowance)}`;
-      els.bonusFormula.textContent = `${month} / 12 × ${money.format(avgMonthly)}`;
+      els.plusTwoFormula.textContent = `2 × ${money.format(baseMonthly)}`;
+      els.plusOneFormula.textContent = `${money.format(baseMonthly)} − ${money.format(allowance)}`;
+      els.bonusFormula.textContent = `${month} / 12 × ${money.format(baseMonthly)}`;
       els.leavePayFormula.textContent = `${formatNumber(leaveDays)} × ${money.format(dailyWage)} × 2`;
       els.nPay.textContent = money.format(nPay);
       els.plusTwo.textContent = money.format(plusTwo);
@@ -443,7 +463,7 @@
       els.grandTotal.textContent = money.format(total);
 
       if (isCapped) {
-        els.capBanner.textContent = `平均月薪（总包/12）为 ${money.format(avgMonthly)}，已超过上海三倍社平 ${money.format(cap)}，仅 N 按三倍社平计算，+1 和 +2 仍按平均月薪。`;
+        els.capBanner.textContent = `平均月薪（总包/12）为 ${money.format(avgMonthly)}，已超过上海三倍社平 ${money.format(cap)}，仅 N 按三倍社平计算；+1 和 +2 按不含奖月薪 ${money.format(baseMonthly)}。`;
         els.capBanner.classList.add("is-on");
       } else {
         els.capBanner.classList.remove("is-on");
